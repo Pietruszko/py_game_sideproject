@@ -9,19 +9,34 @@ running = True
 dt = 0 #delta time
 
 class Ball:
-    def __init__(self, x, y, radius, color):
+    def __init__(self, x, y, radius, color, speed, direction, angle):
         self.x = x
         self.y = y
         self.radius = radius
         self.color = color
+        self.speed = speed
+        self.direction = pygame.Vector2(direction)
+        self.angle = angle
+        self.rect = pygame.Rect(self.x, self.y, self.radius, self.radius)
+        self.rect.center = (x, y)
 
     def draw(self):
-        pygame.draw.circle(screen, self.color, (self.x, self.y), self.radius)
+        pygame.draw.circle(screen, self.color, self.rect.center, self.radius)
 
     def update(self):
-        if self.y >= screen.get_height():
-            self.y = screen.get_height() / 2
-            self.x = screen.get_width() / 2
+        if self.rect.y >= screen.get_height():
+            self.rect.y = screen.get_height() / 2
+            self.rect.x = screen.get_width() / 2
+        self.rect.y += self.speed * self.direction.y * dt
+        if self.rect.y <= 0:
+            self.direction.y *= -1
+        if pygame.Rect.colliderect(self.rect, player.rect):
+            self.direction.y *= -1
+            self.direction.x = self.angle + 90 + (pygame.math.lerp(-150, 150, (player.speed + player.max_speed)/(player.max_speed + player.max_speed)))
+        self.rect.x += self.direction.x * dt
+        if self.rect.x <= 0 or self.rect.x >= screen.get_width() - self.radius:
+            self.direction.x *= -1
+        self.angle = pygame.math.Vector2.angle_to(self.direction, pygame.Vector2(0, 0))
 
 class Player:
     def __init__(self, x, y, width, height, color, speed, max_speed):
@@ -36,8 +51,7 @@ class Player:
         self.rect.center = (x, y)
 
     def draw(self):
-        pygame.draw.rect(screen, self.color, self.rect)
-        
+        pygame.draw.rect(screen, self.color, self.rect)       
 
     def update(self):
         if self.rect.x < 0:
@@ -53,16 +67,8 @@ class Player:
         if not keys[pygame.K_a] and not keys[pygame.K_d]:
             self.speed = 0
 
-
-circle_pos = pygame.Vector2(screen.get_width() / 2, screen.get_height() / 2)
-circle = pygame.Rect(circle_pos.x, circle_pos.y, 20, 20)
-circle_direction_y = 1
-initial_circle_direction_x = random.randint(-100, 100)
-circle_direction_x = 0
-circle_speed = 400
-circle_angle = 90
-
 player = Player(screen.get_width() / 2, screen.get_height() - 100, 400, 10, "black", 0 , 500)
+ball = Ball(screen.get_width() / 2, screen.get_height() / 2, 20, "blue", 400, (0, 1), 90)
 
 
 while running:
@@ -78,31 +84,8 @@ while running:
 
     player.update()
     player.draw()
-
-    pygame.draw.circle(screen, "red", circle.center, circle.width/2) #draw a circle at circle_pos
-    
-    def circle_collision():
-        if pygame.Rect.colliderect(player.rect, circle):
-            return True
-        else:
-            return False  
-
-    circle_angle = pygame.math.Vector2.angle_to(pygame.Vector2(circle_direction_x, circle_direction_y), pygame.Vector2(0, 0))
-    circle.center += pygame.Vector2(circle_direction_x, circle_direction_y * 400) * dt
-
-    if circle.x <= 0 or circle.x >= screen.get_width() - circle.width:
-        circle_direction_x *= -1
-    if circle.y <= 0:
-        circle_direction_y *= -1
-    if circle.y >= screen.get_height():
-        circle_pos = pygame.Vector2(screen.get_width() / 2, screen.get_height() / 2)
-        circle = pygame.Rect(circle_pos.x, circle_pos.y, 20, 20)
-        circle_direction_y = 1
-        circle_direction_x = 0
-
-    if circle_collision():
-        circle_direction_y *= -1
-        circle_direction_x = circle_angle + 90 + (pygame.math.lerp(-150, 150, (player.speed + player.max_speed)/(player.max_speed + player.max_speed)))
+    ball.update()
+    ball.draw()
 
     #render game here
 
