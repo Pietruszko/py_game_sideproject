@@ -9,7 +9,7 @@ running = True
 dt = 0 #delta time
 
 class Ball:
-    def __init__(self, x, y, image, speed, direction, angle):
+    def __init__(self, x, y, image, speed, direction, angle, bricks):
         self.x = x
         self.y = y
         self.image = image
@@ -19,6 +19,7 @@ class Ball:
         self.rect = self.image.get_rect()
         self.rect.center = (x, y)
         self.mask = pygame.mask.from_surface(self.image)
+        self.bricks = bricks
 
     def draw(self):
         screen.blit(self.image, self.rect)
@@ -38,6 +39,10 @@ class Ball:
         if self.rect.x <= 0 or self.rect.x >= screen.get_width() - self.rect.width:
             self.direction.x *= -1
         self.angle = pygame.math.Vector2.angle_to(self.direction, pygame.Vector2(0, 0))
+        if pygame.sprite.spritecollide(self, self.bricks, dokill = False):
+            print("yoo")
+            print(pygame.sprite.spritecollideany(self, self.bricks))
+            print(bricks.sprites())
         if pygame.Rect.colliderect(self.rect, brick.top):
             self.direction.y *= -1
             brick.rect.x = random.randint(0, screen.get_width() - brick.rect.width)
@@ -86,11 +91,13 @@ class Player:
         if not keys[pygame.K_a] and not keys[pygame.K_d]:
             self.speed = 0
 
-class Brick:
-    def __init__(self, x, y, image):
+class Brick(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        pygame.sprite.Sprite.__init__(self)
         self.x = x
         self.y = y
-        self.image = image
+        self.image = pygame.image.load("Sprites/brick.png").convert_alpha()
+        self.image = pygame.transform.scale(self.image, (192, 192))
         self.rect = self.image.get_rect()
         self.rect.center = (x, y)
         self.top = pygame.Rect(self.rect.x, self.rect.y, self.rect.width, 1)
@@ -108,16 +115,19 @@ class Brick:
         self.left = pygame.Rect(self.rect.x, self.rect.y, 1, self.rect.height)
         self.right = pygame.Rect(self.rect.x + self.rect.width, self.rect.y, 1, self.rect.height)
 
+
+bricks = pygame.sprite.Group()
+brick = Brick(screen.get_width() / 4, screen.get_height()/4)
+bricks.add(brick)
+brick = Brick(screen.get_width() / 8, screen.get_height()/4)
+bricks.add(brick)
+
 ball = pygame.image.load("Sprites/ball.png").convert_alpha()
-ball = Ball(screen.get_width() / 2, screen.get_height() / 2, ball, 400, (0, 1), 90)
+ball = Ball(screen.get_width() / 2, screen.get_height() / 2, ball, 400, (0, 1), 90, bricks)
 
 player = pygame.image.load("Sprites/player.png").convert_alpha()
 player = pygame.transform.scale(player, (192, 192))
 player = Player(screen.get_width() / 2, screen.get_height() - 100, player, 0, 500)
-
-brick = pygame.image.load("Sprites/brick.png").convert_alpha()
-brick = pygame.transform.scale(brick, (192, 192))
-brick = Brick(screen.get_width() / 4, screen.get_height()/4, brick)
 
 
 while running:
@@ -135,8 +145,8 @@ while running:
     player.draw()
     ball.update()
     ball.draw()
-    brick.update()
-    brick.draw()
+    bricks.update()
+    bricks.draw(screen)
 
     #render game here
 
