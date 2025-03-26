@@ -1,7 +1,7 @@
 ## Brick Breaker (Pygame)
 *A simple Brick Breaker clone with only one level.*
 
-![Gameplay Screenshot](pygame_bb_ss.png)
+![Gameplay Screenshot](gameplay.png)
 
 ## How to Play
 1. Install Pygame:  
