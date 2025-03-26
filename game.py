@@ -39,26 +39,14 @@ class Ball:
         if self.rect.x <= 0 or self.rect.x >= screen.get_width() - self.rect.width:
             self.direction.x *= -1
         self.angle = pygame.math.Vector2.angle_to(self.direction, pygame.Vector2(0, 0))
-        if pygame.sprite.spritecollide(self, self.bricks, dokill = False):
-            print("yoo")
-            print(pygame.sprite.spritecollideany(self, self.bricks))
-            print(bricks.sprites())
-        if pygame.Rect.colliderect(self.rect, brick.top):
-            self.direction.y *= -1
-            brick.rect.x = random.randint(0, screen.get_width() - brick.rect.width)
-            brick.rect.y = random.randint(0, screen.get_height() - brick.rect.height)
-        if pygame.Rect.colliderect(self.rect, brick.bottom):
-            self.direction.y *= -1
-            brick.rect.x = random.randint(0, screen.get_width() - brick.rect.width)
-            brick.rect.y = random.randint(0, screen.get_height() - brick.rect.height)
-        if pygame.Rect.colliderect(self.rect, brick.left):
-            self.direction.x *= -1
-            brick.rect.x = random.randint(0, screen.get_width() - brick.rect.width)
-            brick.rect.y = random.randint(0, screen.get_height() - brick.rect.height)
-        if pygame.Rect.colliderect(self.rect, brick.right):
-            self.direction.x *= -1
-            brick.rect.x = random.randint(0, screen.get_width() - brick.rect.width)
-            brick.rect.y = random.randint(0, screen.get_height() - brick.rect.height)
+        collision = pygame.sprite.spritecollide(self, self.bricks, dokill = True)
+        for brick in collision:
+            if pygame.Rect.colliderect(self.rect, brick.top) or pygame.Rect.colliderect(self.rect, brick.bottom):
+                self.direction.y *= -1
+                break
+            if pygame.Rect.colliderect(self.rect, brick.left) or pygame.Rect.colliderect(self.rect, brick.right):
+                self.direction.x *= -1
+                break
 
 
 class Player:
@@ -92,12 +80,12 @@ class Player:
             self.speed = 0
 
 class Brick(pygame.sprite.Sprite):
-    def __init__(self, x, y):
+    def __init__(self, x, y, w, h):
         pygame.sprite.Sprite.__init__(self)
         self.x = x
         self.y = y
         self.image = pygame.image.load("Sprites/brick.png").convert_alpha()
-        self.image = pygame.transform.scale(self.image, (192, 192))
+        self.image = pygame.transform.scale(self.image, (w, h))
         self.rect = self.image.get_rect()
         self.rect.center = (x, y)
         self.top = pygame.Rect(self.rect.x, self.rect.y, self.rect.width, 1)
@@ -117,10 +105,20 @@ class Brick(pygame.sprite.Sprite):
 
 
 bricks = pygame.sprite.Group()
-brick = Brick(screen.get_width() / 4, screen.get_height()/4)
-bricks.add(brick)
-brick = Brick(screen.get_width() / 8, screen.get_height()/4)
-bricks.add(brick)
+screen_w = screen.get_width()
+screen_h = screen.get_height()
+width = screen_w/15
+height = width/2
+start_x = width/2 + width/2
+start_y = height/2 + height/2
+
+for i in range(int(screen_h/(height*3))):
+    for j in range(int(screen_w/width-1)):
+        bricks.add(Brick(start_x, start_y, width, height))
+        start_x += width       
+    start_x = width/2 + width/2
+    start_y += height
+
 
 ball = pygame.image.load("Sprites/ball.png").convert_alpha()
 ball = Ball(screen.get_width() / 2, screen.get_height() / 2, ball, 400, (0, 1), 90, bricks)
